@@ -1,0 +1,78 @@
+.simple { width: 100%; border-collapse: collapse; }
+.simple thead th { background: #161626; color: #a6a6b3; padding: 8px; border-bottom: 1px solid #2a2a38; text-align: left; }
+.simple tbody td { padding: 10px; border-bottom: 1px solid #2a2a38; }
+.btn-row { display: flex; gap: 8px; flex-wrap: wrap; }
+
+/* Mobile table action buttons */
+@media (max-width: 768px) {
+	tbody td:last-child {
+		position: sticky;
+		right: 0;
+		background: var(--card);
+		z-index: 1;
+	}
+	tbody td:last-child .btn {
+		margin: 2px;
+		font-size: 10px;
+		padding: 4px 6px;
+		white-space: nowrap;
+	}
+	.simple tbody td:last-child {
+		position: relative;
+	}
+	.simple tbody td:last-child .btn {
+		display: block;
+		width: 100%;
+		margin: 4px 0;
+	}
+}
+
+@media (max-width: 480px) {
+	tbody td:last-child .btn {
+		font-size: 9px;
+		padding: 3px 5px;
+	}
+}
+
+/* Mobile customer info card */
+@media (max-width: 768px) {
+	.card > div[style*="display:flex"] {
+		flex-direction: column !important;
+		align-items: flex-start !important;
+		gap: 8px !important;
+	}
+	.card > div[style*="display:flex"] strong {
+		display: inline-block;
+		min-width: 80px;
+	}
+	.card > div[style*="display:flex"] input[style*="width:200px"] {
+		width: 100% !important;
+	}
+}
+
+.toast {
+	position: fixed;
+	right: 16px;
+	bottom: 16px;
+	background: #14141f;
+	border: 1px solid #2a2a38;
+	color: #e7e7ef;
+	border-radius: 12px;
+	padding: 12px 14px;
+	box-shadow: 0 8px 24px rgba(0,0,0,0.35);
+	z-index: 40;
+	max-width: calc(100vw - 32px);
+}
+
+@media (max-width: 768px) {
+	.toast {
+		right: 12px;
+		bottom: 12px;
+		left: 12px;
+		max-width: none;
+		padding: 10px 12px;
+		font-size: 13px;
+	}
+}
+
+

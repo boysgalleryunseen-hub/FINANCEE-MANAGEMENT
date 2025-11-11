@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Offline Finance Manager</title>
+	<link rel="preconnect" href="https://fonts.googleapis.com">
+	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+	<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+	<link rel="stylesheet" href="styles/base.css">
+	<link rel="stylesheet" href="styles/components.css">
+	<link rel="stylesheet" href="styles/themes.css">
+	<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11.12.4/dist/sweetalert2.min.css">
+	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+</head>
+<body>
+	<header class="app-header">
+		<div class="brand">
+			<i class="fa-solid fa-sack-dollar"></i>
+			<span id="orgNameHeader">Finance Manager</span>
+		</div>
+		<nav class="nav">
+			<button class="nav-btn" data-route="loans"><i class="fa-solid fa-table-list"></i><span>Loans</span></button>
+			<button class="nav-btn" data-route="settings"><i class="fa-solid fa-gear"></i><span>Settings</span></button>
+		</nav>
+		<div class="user-area">
+			<span id="currentUserLabel"></span>
+			<button id="toggleThemeBtn" title="Toggle theme" class="icon-btn"><i class="fa-solid fa-moon"></i></button>
+			<button id="logoutBtn" class="btn small">Logout</button>
+		</div>
+	</header>
+
+	<main id="appRoot">
+		<section id="view-loans" class="view hidden">
+			<div class="toolbar">
+				<div class="left">
+					<button id="addLoanBtn" class="btn"><i class="fa-solid fa-plus"></i> Add Loan</button>
+					<div class="btn-group">
+						<button id="exportJsonBtn" class="btn small"><i class="fa-solid fa-file-export"></i> Export JSON</button>
+						<button id="exportCsvBtn" class="btn small"><i class="fa-solid fa-file-csv"></i> Export CSV</button>
+						<label for="importFile" class="btn small"><i class="fa-solid fa-file-import"></i> Import</label>
+						<input id="importFile" type="file" accept=".json,.csv" hidden>
+					</div>
+				</div>
+				<div class="right">
+					<input id="searchInput" class="input" placeholder="Search customer, documents, given by">
+					<select id="filterScope" class="input">
+						<option value="mine">Mine</option>
+						<option value="all">All</option>
+					</select>
+				</div>
+			</div>
+			<div class="table-wrapper">
+				<table id="loansTable">
+					<thead>
+						<tr>
+							<th data-sort="customerName">Customer</th>
+							<th data-sort="principalAmount">Principal Amount</th>
+							<th data-sort="interestPct">Interest %</th>
+							<th>Interest/Month</th>
+							<th>Total Interest</th>
+							<th>Document Charge</th>
+							<th>Pending Interest</th>
+							<th>Months</th>
+							<th>Status</th>
+							<th>Actions</th>
+						</tr>
+					</thead>
+					<tbody id="loansTbody"></tbody>
+				</table>
+			</div>
+		</section>
+
+		<section id="view-settings" class="view hidden">
+			<div class="grid-2">
+				<div class="card">
+					<h3>Organization</h3>
+					<label class="field">
+						<span>Company Name</span>
+						<input id="orgNameInput" class="input" placeholder="Eg. Star Finance Co.">
+					</label>
+					<label class="field">
+						<span>Default Interest %</span>
+						<input id="defaultInterestInput" class="input" type="number" min="0" step="0.01">
+					</label>
+					<label class="field">
+						<span>Alert Days Before Due</span>
+						<input id="alertDaysInput" class="input" type="number" min="0" step="1">
+					</label>
+					<label class="field inline">
+						<input id="autoBackupCheckbox" type="checkbox">
+						<span>Enable weekly auto-backup</span>
+					</label>
+					<div class="btn-row">
+						<button id="saveSettingsBtn" class="btn">Save Settings</button>
+						<button id="backupNowBtn" class="btn secondary">Backup Now</button>
+						<label for="restoreFile" class="btn secondary">Restore</label>
+						<input id="restoreFile" type="file" accept=".json" hidden>
+					</div>
+				</div>
+				<div class="card">
+					<h3>Users</h3>
+					<div class="user-form">
+						<input id="userNameInput" class="input" placeholder="Name (e.g., Ravi)">
+						<input id="userPinInput" class="input" placeholder="4-digit PIN" maxlength="4">
+						<select id="userRoleInput" class="input">
+							<option value="staff">Staff</option>
+							<option value="admin">Admin</option>
+						</select>
+						<button id="addUserBtn" class="btn small">Add/Update User</button>
+					</div>
+					<table class="simple">
+						<thead><tr><th>Name</th><th>Role</th><th>Actions</th></tr></thead>
+						<tbody id="usersTbody"></tbody>
+					</table>
+				</div>
+			</div>
+		</section>
+	</main>
+
+	<!-- Add/Edit Loan Modal -->
+	<div id="loanModal" class="modal hidden" role="dialog" aria-modal="true">
+		<div class="modal-content">
+			<div class="modal-header">
+				<h3 id="loanModalTitle">Add Loan</h3>
+				<button class="icon-btn" data-close-modal="loanModal"><i class="fa-solid fa-xmark"></i></button>
+			</div>
+			<div class="modal-body">
+				<div class="grid-2">
+					<label class="field"><span>Customer Name</span><input id="loanCustomerInput" class="input"></label>
+					<label class="field"><span>Phone Number</span><input id="loanPhoneInput" class="input" type="tel" placeholder="e.g., +91 9876543210"></label>
+					<label class="field"><span>Principal Amount</span><input id="loanAmountInput" class="input" type="number" min="0" step="0.01"></label>
+					<label class="field"><span>Interest %</span><input id="loanInterestInput" class="input" type="number" min="0" step="0.01"></label>
+					<label class="field"><span>Document Charge %</span><input id="loanDocChargeInput" class="input" type="number" min="0" step="0.01"></label>
+					<label class="field"><span>Number of Months</span><input id="loanMonthsInput" class="input" type="number" min="1" step="1"></label>
+					<label class="field"><span>Due Date</span><input id="loanDueDateInput" class="input" type="date"></label>
+					<label class="field full"><span>Documents Taken</span><input id="loanDocsInput" class="input" placeholder="e.g., Aadhaar, PAN, Land Doc"></label>
+				</div>
+				<div class="card" id="loanCalcCard" style="margin-top:10px;">
+					<h4 style="margin:0 0 8px 0;">Calculated</h4>
+					<div id="loanCalcSummary" class="summary-row"></div>
+				</div>
+			</div>
+			<div class="modal-footer">
+				<button id="loanSaveBtn" class="btn">Save</button>
+			</div>
+		</div>
+	</div>
+
+	<!-- Payments Modal -->
+	<div id="paymentsModal" class="modal hidden" role="dialog" aria-modal="true">
+		<div class="modal-content">
+			<div class="modal-header">
+				<h3>Payments</h3>
+				<button class="icon-btn" data-close-modal="paymentsModal"><i class="fa-solid fa-xmark"></i></button>
+			</div>
+			<div class="modal-body">
+				<div class="tabs" style="display:flex; gap:8px; margin-bottom:10px;">
+					<button id="tabHistoryBtn" class="btn small">History</button>
+					<button id="tabDocumentsBtn" class="btn small secondary">Documents</button>
+				</div>
+				<div id="historySection">
+					<div id="paymentsSummary" class="summary-row"></div>
+					<table class="simple">
+						<thead>
+							<tr>
+								<th>Month</th>
+								<th>Interest Amt</th>
+								<th>Paid?</th>
+								<th>Date Paid</th>
+								<th>Remaining</th>
+								<th>Action</th>
+							</tr>
+						</thead>
+						<tbody id="paymentsTbody"></tbody>
+					</table>
+				</div>
+				<div id="documentsSection" class="hidden">
+					<div class="card" style="margin-bottom:15px; padding:12px;">
+						<div style="display:flex; align-items:center; gap:12px; flex-wrap:wrap;">
+							<strong>Customer:</strong> <span id="docCustomerName">-</span>
+							<strong>Phone:</strong> 
+							<span id="docPhoneDisplay">-</span>
+							<button id="docPhoneEditBtn" class="btn small icon-btn" title="Edit phone number" style="display:none;"><i class="fa-solid fa-pencil"></i></button>
+							<input id="docPhoneInput" class="input" type="tel" style="display:none; width:200px;" placeholder="Phone number">
+							<button id="docPhoneSaveBtn" class="btn small" style="display:none;">Save</button>
+							<button id="docPhoneCancelBtn" class="btn small secondary" style="display:none;">Cancel</button>
+						</div>
+					</div>
+					<div class="payment-form" style="margin-bottom:10px;">
+						<select id="docTypeInput" class="input">
+							<option value="Aadhaar">Aadhaar</option>
+							<option value="PAN">PAN</option>
+							<option value="RC Book">RC Book</option>
+							<option value="ID proof">ID proof</option>
+							<option value="Agreement">Agreement</option>
+						</select>
+						<input id="docNumberInput" class="input" placeholder="Document Number (optional)">
+						<input id="docFileInput" class="input" type="file" accept=".pdf,.png,.jpg,.jpeg">
+						<button id="uploadDocBtn" class="btn small">Upload New Document</button>
+					</div>
+					<table class="simple">
+						<thead>
+							<tr>
+								<th>Document Type</th>
+								<th>Document No.</th>
+								<th>Received Date</th>
+								<th>File</th>
+								<th>Verified</th>
+								<th>Action</th>
+							</tr>
+						</thead>
+						<tbody id="documentsTbody"></tbody>
+					</table>
+				</div>
+			</div>
+			<div class="modal-footer">
+				<button id="downloadHistoryPdfBtn" class="btn">Download Full History PDF</button>
+			</div>
+		</div>
+	</div>
+
+	<!-- Login Overlay -->
+	<div id="loginOverlay" class="login-overlay">
+		<div class="login-card">
+			<h2><i class="fa-solid fa-sack-dollar"></i> Offline Finance Manager</h2>
+			<div class="login-form">
+				<input id="loginNameInput" class="input" placeholder="Username (e.g., Ravi)">
+				<input id="loginPinInput" class="input" placeholder="4-digit PIN" maxlength="4">
+				<button id="loginBtn" class="btn wide">Login</button>
+			</div>
+			<p class="hint">First time? Add a user in Settings after login. Default user is created if none exists.</p>
+		</div>
+	</div>
+
+	<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.12.4/dist/sweetalert2.all.min.js"></script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+	<script src="scripts/utils.js"></script>
+	<script src="scripts/storage.js"></script>
+	<script src="scripts/models.js"></script>
+	<script src="scripts/settings.js"></script>
+	<script src="scripts/auth.js"></script>
+	<script src="scripts/receipts.js"></script>
+	<script src="scripts/notifications.js"></script>
+	<script src="scripts/importExport.js"></script>
+	<script src="scripts/payments.js"></script>
+	<script src="scripts/loans.js"></script>
+	<script src="scripts/app.js"></script>
+</body>
+</html>
+
+
